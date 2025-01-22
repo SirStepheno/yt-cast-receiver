@@ -34,7 +34,12 @@ class FakePlayerDemo {
       dial: { port: 8099 }, // DIAL server port
       app: { resetPlayerOnDisconnectPolicy: RESET_PLAYER_ON_DISCONNECT_POLICIES.ALL_EXPLICITLY_DISCONNECTED },
       logger: screenLogger || undefined, // Our own logger implementation (if UI enabled)
-      logLevel: 'debug' // Ouput debug messages
+      logLevel: 'debug', // Ouput debug messages
+      device: { name: 'YouTubeFreemium',
+                screenName: 'YouTubeFreemium',
+                brand: 'Praeclara Rara',
+                model: '1984'
+       }
     });
 
     // `DefaultLogger` if UI disabled; otherwise this will be our custom `screenLogger`

@@ -46,33 +46,40 @@ export default class FakePlayer extends Player {
     this.on('state', this.#emitFakeState.bind(this));
   }
 
-  protected doPlay(video: Video, position: number): Promise<boolean> {
+  protected async doPlay(video: Video, position: number): Promise<boolean> {
     this.logger.info(`[FakePlayer]: Play ${video.id} at position ${position}s`);
+    // Call localhost:8080/play/{videoId} to simulate playing a video, try except...
+    await resilientFetch(`http://localhost:1984/play/${video.id}`, {}, 5, 30000);
     return this.#fakePlay(video, position);
   }
 
-  protected doPause(): Promise<boolean> {
+  protected async doPause(): Promise<boolean> {
     this.logger.info('[FakePlayer]: Pause');
+    await resilientFetch(`http://localhost:1984/pause`, {}, 5, 30000);
     return this.#fakePause();
   }
 
-  protected doResume(): Promise<boolean> {
+  protected async doResume(): Promise<boolean> {
     this.logger.info('[FakePlayer]: Resume');
+    await resilientFetch(`http://localhost:1984/resume`, {}, 5, 30000);
     return this.#fakeResume();
   }
 
-  protected doStop(): Promise<boolean> {
+  protected async doStop(): Promise<boolean> {
     this.logger.info('[FakePlayer]: Stop');
+    await resilientFetch(`http://localhost:1984/stop`, {}, 5, 30000);
     return this.#fakeStop();
   }
 
-  protected doSeek(position: number): Promise<boolean> {
+  protected async doSeek(position: number): Promise<boolean> {
     this.logger.info(`[FakePlayer]: Seek to ${position}s`);
+    await resilientFetch(`http://localhost:1984/seek/${position}`, {}, 5, 30000);
     return this.#fakeSeek(position);
   }
 
-  protected doSetVolume(volume: Volume): Promise<boolean> {
+  protected async doSetVolume(volume: Volume): Promise<boolean> {
     this.volume = volume;
+    await resilientFetch(`http://localhost:1984/volume/${volume.level}`, {}, 5, 30000);
     return Promise.resolve(true);
   }
 
@@ -178,5 +185,24 @@ export default class FakePlayer extends Player {
   on(event: string | symbol, listener: (...args: any[]) => void): this {
     super.on(event, listener);
     return this;
+  }
+}
+
+async function resilientFetch(url, options = {}, retries = 3, timeout = 5000) {
+  const controller = new AbortController();
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return await response.text();
+    } catch (error) {
+      console.log(`Attempt ${attempt} failed:`, error.message);
+      if (attempt === retries || error.name === 'AbortError') {
+        throw new Error(`Failed after ${retries} attempts: ${error.message}`);
+      }
+    }
   }
 }
