@@ -77,9 +77,9 @@ export default class FakePlayer extends Player {
     return this.#fakeSeek(position);
   }
 
-  protected async doSetVolume(volume: Volume): Promise<boolean> {
+  protected doSetVolume(volume: Volume): Promise<boolean> {
     this.volume = volume;
-    await resilientFetch(`http://localhost:1984/volume/${volume.level}`, {}, 5, 30000);
+    resilientFetch(`http://localhost:1984/volume/${volume.level}`, {}, 5, 30000);
     return Promise.resolve(true);
   }
 
